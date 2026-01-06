@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chisme IA - Portal de Noticias Verificadas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #151b3d;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --text-primary: #ffffff;
+            --text-secondary: #b4b9d8;
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-tertiary: #ec4899;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            --internacional: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --nacional: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --espectaculos: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --cultura: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --ciencia: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.9);
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a5568;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: background 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(236, 72, 153, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            padding: 2rem 0;
+            backdrop-filter: blur(20px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-card);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary), var(--accent-tertiary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -1px;
+        }
+
+        .theme-toggle {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.25rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Search Section */
+        .search-section {
+            padding: 4rem 0;
+            text-align: center;
+        }
+
+        .search-section h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .search-section p {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            padding: 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow);
+        }
+
+        .search-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-size: 1rem;
+            padding: 0.75rem 1rem;
+            outline: none;
+        }
+
+        .search-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-outline {
+            background: var(--bg-card);
+            border: 2px solid var(--accent-primary);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+        }
+
+        /* Result Section */
+        .result-section {
+            margin-top: 3rem;
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow);
+            display: none;
+        }
+
+        .result-section.active {
+            display: block;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-content {
+            color: var(--text-primary);
+            line-height: 1.8;
+        }
+
+        .result-content strong {
+            color: var(--accent-primary);
+        }
+
+        /* News Section */
+        .news-section {
+            padding: 4rem 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-header h2 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .section-header p {
+            color: var(--text-secondary);
+            font-size: 1.125rem;
+        }
+
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .news-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .news-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--card-gradient, var(--internacional));
+            transition: height 0.3s ease;
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+            border-color: var(--accent-primary);
+        }
+
+        .news-card:hover::before {
+            height: 8px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 1rem;
+            background: var(--card-gradient, var(--internacional));
+            color: white;
+        }
+
+        .news-card.internacional::before,
+        .tag.internacional {
+            background: var(--internacional);
+        }
+
+        .news-card.nacional::before,
+        .tag.nacional {
+            background: var(--nacional);
+        }
+
+        .news-card.espectaculos::before,
+        .tag.espectaculos {
+            background: var(--espectaculos);
+        }
+
+        .news-card.cultura::before,
+        .tag.cultura {
+            background: var(--cultura);
+        }
+
+        .news-card.ciencia::before,
+        .tag.ciencia {
+            background: var(--ciencia);
+        }
+
+        .news-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+            color: var(--text-primary);
+        }
+
+        .news-summary {
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .source-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .source-btn:hover {
+            gap: 0.75rem;
+            color: var(--accent-secondary);
+        }
+
+        /* Loading States */
+        .loading {
+            text-align: center;
+            padding: 3rem;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border-color);
+            border-top: 4px solid var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-card {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .error-card h3 {
+            color: #ef4444;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .search-section h1 {
+                font-size: 2rem;
+            }
+
+            .search-box {
+                flex-direction: column;
+            }
+
+            .news-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .logo {
+                font-size: 1.5rem;
+            }
+
+            .section-header h2 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Smooth Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-tertiary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">CHISME IA</div>
+                <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="search-section">
+            <div class="container">
+                <h1>Investigación de Hechos</h1>
+                <p>Ingrese la noticia rumor o duda para verificar su veracidad en tiempo real mediante fuentes oficiales.</p>
+                
+                <div class="search-box">
+                    <input 
+                        type="text" 
+                        class="search-input" 
+                        id="searchInput"
+                        placeholder="Ej: Situación actual de la economía global..."
+                        onkeypress="if(event.key==='Enter') verificar()"
+                    >
+                    <button class="btn" onclick="verificar()">VERIFICAR</button>
+                </div>
+
+                <div class="result-section" id="resultSection">
+                    <div class="result-content" id="resultContent"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="news-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2>Noticias del Día</h2>
+                    <p>Las historias más importantes verificadas y actualizadas</p>
+                </div>
+
+                <div style="text-align: center; margin-bottom: 2rem;">
+                    <button class="btn btn-outline" onclick="cargarNoticias()">
+                        📰 Cargar Noticias del Día
+                    </button>
+                </div>
+
+                <div class="news-grid" id="newsGrid">
+                    <!-- Las noticias se cargarán aquí -->
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const btn = document.querySelector('.theme-toggle');
+            const currentTheme = html.getAttribute('data-theme');
+            
+            if (currentTheme === 'light') {
+                html.removeAttribute('data-theme');
+                btn.textContent = '🌙';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                html.setAttribute('data-theme', 'light');
+                btn.textContent = '☀️';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Load saved theme
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                document.querySelector('.theme-toggle').textContent = '☀️';
+            }
+        });
+
+        // Verificar función
+        async function verificar() {
+            const input = document.getElementById('searchInput');
+            const pregunta = input.value.trim();
+            
+            if (!pregunta) {
+                alert('Por favor, escribe algo para verificar');
+                return;
+            }
+
+            const resultSection = document.getElementById('resultSection');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultSection.classList.add('active');
+            resultContent.innerHTML = '<div class="loading"><div class="spinner"></div><p>Verificando información...</p></div>';
+
+            try {
+                const response = await fetch('/chisme', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pregunta })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let result = '';
+
+                resultContent.innerHTML = '';
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+                    
+                    const chunk = decoder.decode(value);
+                    result += chunk;
+                    resultContent.innerHTML = formatText(result);
+                }
+
+            } catch (error) {
+                resultContent.innerHTML = '<div class="error-card"><h3>Error</h3><p>No se pudo completar la verificación. Intenta de nuevo.</p></div>';
+            }
+        }
+
+        // Cargar noticias
+        async function cargarNoticias() {
+            const newsGrid = document.getElementById('newsGrid');
+            newsGrid.innerHTML = '<div class="loading" style="grid-column: 1/-1;"><div class="spinner"></div><p>Cargando noticias verificadas...</p></div>';
+
+            try {
+                const response = await fetch('/noticias-dia');
+                const data = await response.json();
+
+                if (data.error) {
+                    newsGrid.innerHTML = data.html;
+                } else {
+                    newsGrid.innerHTML = data.html;
+                }
+
+            } catch (error) {
+                newsGrid.innerHTML = '<div class="error-card" style="grid-column: 1/-1;"><h3>Error temporal</h3><p>No se pudieron cargar las noticias. Intenta de nuevo.</p></div>';
+            }
+        }
+
+        // Format text with markdown-like syntax
+        function formatText(text) {
+            return text
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\n/g, '<br>');
+        }
+    </script>
+</body>
+</html>

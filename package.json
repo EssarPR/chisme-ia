@@ -1,0 +1,17 @@
+{
+  "name": "chisme-ia",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "dev": "node app.js"
+  },
+  "engines": {
+    "node": "18.x"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1"
+  }
+}
