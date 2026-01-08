@@ -301,3 +301,6 @@ app.listen(PORT, () => {
     console.log(`📅 Fecha: ${new Date().toLocaleString('es-MX')}`);
     console.log("═══════════════════════════════════════════");
 });
+
+// IMPORTANTE: Exportar para Vercel
+module.exports = app;
