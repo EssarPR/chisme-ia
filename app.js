@@ -1,6 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const path = require('path');
 const app = express();
 
 // CORRECCIÓN: Usar la clase correcta del SDK oficial
@@ -60,6 +61,11 @@ app.use((req, res, next) => {
     
     userData.count++;
     next();
+});
+
+// --- RUTA 0: PÁGINA PRINCIPAL (HOMEPAGE) ---
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // --- RUTA 1: INVESTIGACIÓN CON STREAMING ---
