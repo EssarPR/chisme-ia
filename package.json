@@ -3,12 +3,15 @@
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
-    "dev": "node app.js"
+    "start": "node app.js"
   },
   "engines": {
-    "node": "18.x"
+    "node": "20.x"
   },
+  "keywords": ["noticias", "fact-checking", "gemini", "ai"],
+  "author": "",
+  "license": "ISC",
+  "description": "Portal de noticias verificadas con IA",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "dotenv": "^17.2.3",
