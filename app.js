@@ -102,14 +102,19 @@ app.post('/chisme', async (req, res) => {
 REGLAS ESTRICTAS:
 1. USA la herramienta de búsqueda de Google para verificar información actual
 2. NO uses conocimiento previo para hechos posteriores a enero 2025
-3. Para CADA afirmación, cita la fuente: [Fuente: Nombre del medio - URL]
-4. Si no encuentras información verificable, dilo explícitamente
-5. Incluye fechas cuando estén disponibles
+3. Para CADA afirmación, cita la fuente con este formato EXACTO:
+   [Fuente: Nombre del Medio - URL_COMPLETA_DEL_ARTICULO]
+   Ejemplo: [Fuente: El País - https://elpais.com/internacional/2026-01-13/noticia.html]
+4. Las URLs DEBEN ser direcciones web reales y completas que empiecen con http:// o https://
+5. NO uses URLs internas de búsqueda como "vertexaisearch" o similares
+6. Si no puedes obtener la URL real del artículo, usa la URL del sitio principal del medio
+7. Si no encuentras información verificable, dilo explícitamente
+8. Incluye fechas cuando estén disponibles
 
 FORMATO DE RESPUESTA:
 - Párrafos cortos y directos
 - Resalta datos clave con **negritas**
-- Termina con "🔍 FUENTES VERIFICADAS:" seguido de lista numerada con URLs
+- Termina con "🔍 FUENTES VERIFICADAS:" seguido de lista numerada con URLs REALES Y COMPLETAS
 
 Fecha de hoy: ${new Date().toLocaleDateString('es-MX', { 
     weekday: 'long', 

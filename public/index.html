@@ -48,7 +48,6 @@
             min-height: 100vh;
         }
 
-        /* Animated Background */
         body::before {
             content: '';
             position: fixed;
@@ -72,7 +71,6 @@
             z-index: 1;
         }
 
-        /* Header */
         header {
             padding: 2rem 0;
             backdrop-filter: blur(20px);
@@ -115,7 +113,6 @@
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
-        /* Search Section */
         .search-section {
             padding: 4rem 0;
             text-align: center;
@@ -148,6 +145,7 @@
             border: 1px solid var(--border-color);
             backdrop-filter: blur(10px);
             box-shadow: var(--shadow);
+            position: relative;
         }
 
         .search-input {
@@ -162,6 +160,38 @@
 
         .search-input::placeholder {
             color: var(--text-secondary);
+        }
+
+        .voice-btn {
+            background: transparent;
+            border: 2px solid var(--accent-primary);
+            color: var(--accent-primary);
+            padding: 0.75rem 1rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 1.25rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+        }
+
+        .voice-btn:hover {
+            background: var(--accent-primary);
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .voice-btn.listening {
+            animation: pulse 1.5s infinite;
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
         }
 
         .btn {
@@ -197,7 +227,6 @@
             color: white;
         }
 
-        /* Result Section */
         .result-section {
             margin-top: 3rem;
             background: var(--bg-card);
@@ -234,7 +263,23 @@
             color: var(--accent-primary);
         }
 
-        /* News Section */
+        .result-content a {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: all 0.3s ease;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+        }
+
+        .result-content a:hover {
+            background: var(--bg-card);
+            gap: 0.5rem;
+        }
+
         .news-section {
             padding: 4rem 0;
         }
@@ -265,7 +310,7 @@
         .news-card {
             background: var(--bg-card);
             border-radius: 20px;
-            padding: 2rem;
+            padding: 0;
             border: 1px solid var(--border-color);
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
@@ -292,6 +337,17 @@
 
         .news-card:hover::before {
             height: 8px;
+        }
+
+        .news-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .news-content {
+            padding: 2rem;
         }
 
         .tag {
@@ -361,7 +417,6 @@
             color: var(--accent-secondary);
         }
 
-        /* Loading States */
         .loading {
             text-align: center;
             padding: 3rem;
@@ -395,7 +450,6 @@
             margin-bottom: 0.5rem;
         }
 
-        /* Responsive */
         @media (max-width: 768px) {
             .container {
                 padding: 0 1rem;
@@ -420,9 +474,12 @@
             .section-header h2 {
                 font-size: 2rem;
             }
+
+            .voice-btn {
+                width: 100%;
+            }
         }
 
-        /* Smooth Scrollbar */
         ::-webkit-scrollbar {
             width: 10px;
         }
@@ -455,7 +512,7 @@
         <section class="search-section">
             <div class="container">
                 <h1>Investigación de Hechos</h1>
-                <p>Ingrese la noticia rumor o duda para verificar su veracidad en tiempo real mediante fuentes oficiales.</p>
+                <p>Ingrese un nombre o rumor para verificar su veracidad en tiempo real mediante fuentes oficiales.</p>
                 
                 <div class="search-box">
                     <input 
@@ -465,6 +522,9 @@
                         placeholder="Ej: Situación actual de la economía global..."
                         onkeypress="if(event.key==='Enter') verificar()"
                     >
+                    <button class="voice-btn" id="voiceBtn" onclick="toggleVoiceSearch()" title="Búsqueda por voz">
+                        🎤
+                    </button>
                     <button class="btn" onclick="verificar()">VERIFICAR</button>
                 </div>
 
@@ -487,14 +547,70 @@
                     </button>
                 </div>
 
-                <div class="news-grid" id="newsGrid">
-                    <!-- Las noticias se cargarán aquí -->
-                </div>
+                <div class="news-grid" id="newsGrid"></div>
             </div>
         </section>
     </main>
 
     <script>
+        // Voice Recognition
+        let recognition = null;
+        let isListening = false;
+
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'es-MX';
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+                isListening = true;
+                document.getElementById('voiceBtn').classList.add('listening');
+                document.getElementById('searchInput').placeholder = '🎤 Escuchando...';
+            };
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('searchInput').value = transcript;
+                verificar();
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Error en reconocimiento de voz:', event.error);
+                stopVoiceSearch();
+                if (event.error === 'no-speech') {
+                    alert('No se detectó voz. Intenta de nuevo.');
+                }
+            };
+
+            recognition.onend = () => {
+                stopVoiceSearch();
+            };
+        }
+
+        function toggleVoiceSearch() {
+            if (!recognition) {
+                alert('Tu navegador no soporta búsqueda por voz. Intenta con Chrome o Edge.');
+                return;
+            }
+
+            if (isListening) {
+                stopVoiceSearch();
+            } else {
+                recognition.start();
+            }
+        }
+
+        function stopVoiceSearch() {
+            isListening = false;
+            document.getElementById('voiceBtn').classList.remove('listening');
+            document.getElementById('searchInput').placeholder = 'Ej: Situación actual de la economía global...';
+            if (recognition) {
+                recognition.stop();
+            }
+        }
+
         // Theme Toggle
         function toggleTheme() {
             const html = document.documentElement;
@@ -584,11 +700,45 @@
             }
         }
 
-        // Format text with markdown-like syntax
+        // Format text with clean links
         function formatText(text) {
-            return text
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\n/g, '<br>');
+            // Convert **bold** to <strong>
+            let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            
+            // Convert URLs to clean links with domain name
+            formatted = formatted.replace(/\[Fuente:\s*(.*?)\s*-\s*(https?:\/\/[^\]]+)\]/gi, (match, source, url) => {
+                const domain = extractDomain(url);
+                return `<a href="${url}" target="_blank" rel="noopener">${source} 🔗</a>`;
+            });
+            
+            // Also handle standalone URLs
+            formatted = formatted.replace(/(https?:\/\/[^\s<]+)/g, (url) => {
+                const domain = extractDomain(url);
+                return `<a href="${url}" target="_blank" rel="noopener">${domain} 🔗</a>`;
+            });
+            
+            // Convert line breaks
+            formatted = formatted.replace(/\n/g, '<br>');
+            
+            return formatted;
+        }
+
+        // Extract clean domain name from URL
+        function extractDomain(url) {
+            try {
+                const urlObj = new URL(url);
+                let domain = urlObj.hostname.replace('www.', '');
+                
+                // Capitalize first letter
+                const parts = domain.split('.');
+                if (parts.length > 0) {
+                    const name = parts[0];
+                    return name.charAt(0).toUpperCase() + name.slice(1);
+                }
+                return domain;
+            } catch (e) {
+                return 'Ver fuente';
+            }
         }
     </script>
 </body>
