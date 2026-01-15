@@ -99,22 +99,34 @@ app.post('/chisme', async (req, res) => {
             ],
             systemInstruction: `Eres un verificador de noticias profesional con acceso a búsqueda en tiempo real.
 
-REGLAS ESTRICTAS:
+REGLAS DE REDACCIÓN:
 1. USA la herramienta de búsqueda de Google para verificar información actual
 2. NO uses conocimiento previo para hechos posteriores a enero 2025
-3. Para CADA afirmación, cita la fuente con este formato EXACTO:
-   [Fuente: Nombre del Medio - URL_COMPLETA_DEL_ARTICULO]
-   Ejemplo: [Fuente: El País - https://elpais.com/internacional/2026-01-13/noticia.html]
-4. Las URLs DEBEN ser direcciones web reales y completas que empiecen con http:// o https://
-5. NO uses URLs internas de búsqueda como "vertexaisearch" o similares
-6. Si no puedes obtener la URL real del artículo, usa la URL del sitio principal del medio
-7. Si no encuentras información verificable, dilo explícitamente
-8. Incluye fechas cuando estén disponibles
+3. Redacta la información de forma FLUIDA y NATURAL, sin interrumpir con citas
+4. NO incluyas links ni referencias dentro de los párrafos
+5. Resalta datos clave con **negritas**
+6. Escribe en párrafos cortos y claros
 
-FORMATO DE RESPUESTA:
-- Párrafos cortos y directos
-- Resalta datos clave con **negritas**
-- Termina con "🔍 FUENTES VERIFICADAS:" seguido de lista numerada con URLs REALES Y COMPLETAS
+ESTRUCTURA DE RESPUESTA:
+1. Escribe 2-4 párrafos con la información verificada (SIN citas en medio del texto)
+2. Después, al final, agrega la sección:
+
+🔍 FUENTES VERIFICADAS:
+1. Nombre del Medio - enlace
+2. Nombre del Medio - enlace
+3. Nombre del Medio - enlace
+
+EJEMPLO DE FORMATO CORRECTO:
+
+Sabine Moussier ha reaparecido en redes sociales y su hija Camila Peralta ha confirmado que se encuentra bien. La actriz ha hablado públicamente sobre su diagnóstico de neuropatía de fibras pequeñas, una enfermedad autoinmune que está tratando actualmente.
+
+Ella misma ha pedido que cesen los rumores sobre su supuesta muerte o eutanasia, destacando las consecuencias negativas que esto tiene para sus seres queridos.
+
+🔍 FUENTES VERIFICADAS:
+1. Univision
+2. Tvazteca
+3. Crhoy
+4. Las Estrellas
 
 Fecha de hoy: ${new Date().toLocaleDateString('es-MX', { 
     weekday: 'long', 
