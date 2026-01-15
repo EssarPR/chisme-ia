@@ -4,22 +4,20 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const path = require('path');
 const app = express();
 
-// CORRECCIÓN: Usar la clase correcta del SDK oficial
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 app.use(express.json());
 app.use(express.static('public'));
 
-// Sistema de caché simple para evitar agotar la cuota
+// Sistema de caché
 const cache = new Map();
 const CACHE_DURATION = 15 * 60 * 1000; // 15 minutos
 
 // Rate limiting por IP
 const requestCounts = new Map();
-const RATE_LIMIT = 5; // 5 peticiones
-const RATE_WINDOW = 60 * 1000; // por minuto
+const RATE_LIMIT = 5;
+const RATE_WINDOW = 60 * 1000;
 
-// Funciones de caché
 function getCached(key) {
     const cached = cache.get(key);
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
@@ -34,7 +32,6 @@ function setCache(key, data) {
     console.log(`💾 Guardado en cache: ${key}`);
 }
 
-// Middleware de rate limiting
 app.use((req, res, next) => {
     const ip = req.ip;
     const now = Date.now();
@@ -63,7 +60,6 @@ app.use((req, res, next) => {
     next();
 });
 
-// --- RUTA 0: PÁGINA PRINCIPAL (HOMEPAGE) ---
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
@@ -76,7 +72,6 @@ app.post('/chisme', async (req, res) => {
         return res.status(400).json({ error: "❌ Necesito que me digas qué investigar" });
     }
 
-    // Verificar caché primero
     const cacheKey = `chisme:${pregunta.toLowerCase().trim()}`;
     const cached = getCached(cacheKey);
     
@@ -91,30 +86,44 @@ app.post('/chisme', async (req, res) => {
     res.setHeader('Cache-Control', 'no-cache');
 
     try {
-        // CORRECCIÓN: Sintaxis correcta según la documentación oficial
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash", // Modelo estable con mejor cuota
+            model: "gemini-2.5-flash",
             tools: [
-                { googleSearch: {} }  // CORRECCIÓN: Sintaxis correcta para Google Search
+                { googleSearch: {} }
             ],
-            systemInstruction: `Eres un verificador de noticias profesional con acceso a búsqueda en tiempo real.
+            systemInstruction: `Eres un verificador de noticias profesional con acceso a búsqueda en tiempo real de Google.
 
-REGLAS ESTRICTAS:
-1. USA la herramienta de búsqueda de Google para verificar información actual
-2. NO uses conocimiento previo para hechos posteriores a enero 2025
-3. Para CADA afirmación, cita la fuente con este formato EXACTO:
-   [Fuente: Nombre del Medio - URL_COMPLETA_DEL_ARTICULO]
-   Ejemplo: [Fuente: El País - https://elpais.com/internacional/2026-01-13/noticia.html]
-4. Las URLs DEBEN ser direcciones web reales y completas que empiecen con http:// o https://
-5. NO uses URLs internas de búsqueda como "vertexaisearch" o similares
-6. Si no puedes obtener la URL real del artículo, usa la URL del sitio principal del medio
-7. Si no encuentras información verificable, dilo explícitamente
-8. Incluye fechas cuando estén disponibles
+PROCESO OBLIGATORIO AL USAR GOOGLE SEARCH:
+1. La herramienta de búsqueda de Google te devuelve resultados con URLs específicas de artículos
+2. DEBES extraer y usar esas URLs EXACTAS en tus citas
+3. Cada resultado incluye: título del artículo, descripción, y URL completa
+4. Copia la URL COMPLETA tal como te la da Google, sin modificarla
 
-FORMATO DE RESPUESTA:
-- Párrafos cortos y directos
-- Resalta datos clave con **negritas**
-- Termina con "🔍 FUENTES VERIFICADAS:" seguido de lista numerada con URLs REALES Y COMPLETAS
+FORMATO DE CITACIÓN OBLIGATORIO:
+Después de cada afirmación o dato, cita así:
+[Fuente: Nombre del Medio - URL_COMPLETA_DEL_ARTICULO]
+
+Ejemplos CORRECTOS:
+✅ [Fuente: El País - https://elpais.com/internacional/2026-01-13/venezuela-crisis-maduro.html]
+✅ [Fuente: BBC News - https://www.bbc.com/mundo/noticias-internacional-68123456]
+✅ [Fuente: CNN - https://cnnespanol.cnn.com/2026/01/13/economia-inflacion/]
+
+Ejemplos INCORRECTOS:
+❌ [Fuente: El País - https://elpais.com]
+❌ [Fuente: BBC - www.bbc.com]
+❌ [Fuente: Vertexaisearch]
+
+REGLAS CRÍTICAS:
+1. NO uses tu conocimiento previo para hechos después de enero 2025 - SIEMPRE busca
+2. CADA afirmación específica DEBE tener su fuente con URL del artículo exacto
+3. Si Google no te da la URL específica del artículo, NO inventes la cita
+4. Resalta datos clave con **negritas**
+5. Incluye fechas de publicación cuando las tengas
+
+ESTRUCTURA DE RESPUESTA:
+1. Resumen breve del tema (2-3 líneas)
+2. Datos verificados con sus fuentes específicas
+3. Al final: "🔍 FUENTES VERIFICADAS:" con lista numerada de URLs completas
 
 Fecha de hoy: ${new Date().toLocaleDateString('es-MX', { 
     weekday: 'long', 
@@ -124,9 +133,15 @@ Fecha de hoy: ${new Date().toLocaleDateString('es-MX', {
 })}`
         });
 
-        const prompt = `Investiga usando búsqueda de Google: "${pregunta}"
+        const prompt = `Busca información ACTUAL en Google sobre: "${pregunta}"
 
-IMPORTANTE: Busca activamente esta información actual en Google.`;
+INSTRUCCIONES ESPECÍFICAS:
+1. Usa la herramienta de búsqueda de Google
+2. Extrae las URLs EXACTAS de los artículos que encuentres
+3. Cita cada fuente con su URL completa del artículo específico
+4. NO uses URLs genéricas de portadas de medios
+
+Investiga y verifica esta información con fuentes actuales.`;
 
         const result = await model.generateContentStream(prompt);
 
@@ -148,9 +163,7 @@ IMPORTANTE: Busca activamente esta información actual en Google.`;
             fullText = fallback;
         }
 
-        // Guardar en caché
         setCache(cacheKey, fullText);
-        
         res.end();
 
     } catch (error) {
@@ -167,7 +180,6 @@ IMPORTANTE: Busca activamente esta información actual en Google.`;
 
 // --- RUTA 2: PORTADA DE NOTICIAS ---
 app.get('/noticias-dia', async (req, res) => {
-    // Verificar caché primero
     const cacheKey = 'noticias-dia';
     const cached = getCached(cacheKey);
     
@@ -183,62 +195,66 @@ app.get('/noticias-dia', async (req, res) => {
             day: 'numeric' 
         });
 
-        // CORRECCIÓN: Sintaxis correcta según documentación
         const model = genAI.getGenerativeModel({
             model: "gemini-2.5-flash",
             tools: [
-                { googleSearch: {} }  // CORRECCIÓN: Sintaxis correcta
+                { googleSearch: {} }
             ],
-            systemInstruction: `Eres un curador de noticias que DEBE buscar en Google las noticias de HOY.
+            systemInstruction: `Eres un curador de noticias que DEBE buscar en Google las noticias de HOY y extraer URLs específicas.
 
 FECHA DE HOY: ${fechaHoy}
 
 PROCESO OBLIGATORIO:
 1. Busca en Google noticias de las últimas 24 horas
-2. Para cada categoría, busca noticias específicas actuales
-3. VERIFICA que las URLs sean reales
-4. Solo noticias de las últimas 24-48 horas
+2. Google te dará URLs específicas de cada artículo - ÚSALAS EXACTAMENTE
+3. Para cada categoría, encuentra una noticia actual con su URL real
+4. Las URLs deben ser de artículos específicos, no de portadas
 
-CATEGORÍAS (debes generar EXACTAMENTE 5 tarjetas):
-- 🌍 Internacional
-- 🇲🇽 Nacional México
-- 🎭 Espectáculos
-- 🎨 Cultura
-- 🔬 Ciencia
+CATEGORÍAS (genera EXACTAMENTE 5 tarjetas):
+- 🌍 Internacional (conflictos, política global, economía mundial)
+- 🇲🇽 Nacional México (política, seguridad, economía local)
+- 🎭 Espectáculos (celebridades, cine, música VERIFICADO)
+- 🎨 Cultura (arte, literatura, tendencias culturales)
+- 🔬 Ciencia (descubrimientos, tecnología, salud)
 
-FORMATO HTML EXACTO (copia este formato):
-<div class="news-card">
-  <span class="tag internacional">INTERNACIONAL</span>
-  <h3 class="news-title">Título corto de máximo 60 caracteres</h3>
-  <p class="news-summary">Resumen de 2 líneas máximo que explique la noticia.</p>
-  <a href="https://url-completa-real.com" target="_blank" rel="noopener" class="source-btn">Ver noticia 🔗</a>
+FORMATO HTML EXACTO:
+<div class="news-card categoria-lowercase">
+  <img src="https://via.placeholder.com/400x200/667eea/ffffff?text=Nombre+del+Medio" alt="Imagen de noticia" class="news-image">
+  <div class="news-content">
+    <span class="tag categoria-lowercase">CATEGORÍA</span>
+    <h3 class="news-title">Título impactante de máximo 70 caracteres</h3>
+    <p class="news-summary">Resumen conciso en 2 líneas que explique la noticia claramente.</p>
+    <a href="URL_COMPLETA_DEL_ARTICULO_ESPECIFICO" target="_blank" rel="noopener" class="source-btn">Ver noticia 🔗</a>
+  </div>
 </div>
 
-CLASES CSS válidas: "internacional", "nacional", "espectaculos", "cultura", "ciencia"
+CLASES CSS: "internacional", "nacional", "espectaculos", "cultura", "ciencia"
 
-REGLAS:
-- URLs completas con https://
-- NO inventes URLs
-- Si no encuentras noticia, busca con términos diferentes
-- Devuelve SOLO el HTML, sin explicaciones`
+REGLAS CRÍTICAS:
+1. URLs deben ser COMPLETAS y ESPECÍFICAS del artículo (ej: https://elpais.com/internacional/2026-01-13/titulo-noticia.html)
+2. NO uses URLs genéricas como https://elpais.com
+3. NO inventes URLs - si no tienes la URL real, busca otra noticia
+4. Usa placeholder de imágenes con el nombre del medio
+5. Solo noticias de las últimas 24-48 horas
+6. Devuelve SOLO el HTML, sin explicaciones ni markdown`
         });
 
         const prompt = `Busca en Google y genera 5 tarjetas HTML de noticias actuales.
 
+CRÍTICO: Las URLs deben ser de artículos ESPECÍFICOS que Google te proporcione, no de portadas.
+
 Fecha: ${fechaHoy}
 
-Busca noticias verificables de medios reconocidos (El País, BBC, Reforma, CNN, El Universal, etc.) de las últimas 24-48 horas.`;
+Busca en medios reconocidos: El País, BBC, Reforma, CNN, El Universal, Milenio, Forbes, etc.`;
 
         const result = await model.generateContent(prompt);
         const respuestaTexto = result.response.text();
         
-        // Limpiar respuesta
         let htmlLimpio = respuestaTexto
             .replace(/```html/gi, '')
             .replace(/```/g, '')
             .trim();
 
-        // Validación: verificar tarjetas
         const numeroTarjetas = (htmlLimpio.match(/class="news-card"/g) || []).length;
         
         if (numeroTarjetas < 3) {
@@ -252,9 +268,7 @@ Busca noticias verificables de medios reconocidos (El País, BBC, Reforma, CNN, 
             cached: false
         };
 
-        // Guardar en caché
         setCache(cacheKey, response);
-
         res.json(response);
 
     } catch (error) {
@@ -276,7 +290,6 @@ Busca noticias verificables de medios reconocidos (El País, BBC, Reforma, CNN, 
     }
 });
 
-// --- RUTA 3: HEALTH CHECK ---
 app.get('/health', (req, res) => {
     res.json({ 
         status: 'online',
@@ -288,20 +301,17 @@ app.get('/health', (req, res) => {
     });
 });
 
-// --- RUTA 4: LIMPIAR CACHÉ ---
 app.post('/clear-cache', (req, res) => {
     cache.clear();
     requestCounts.clear();
     res.json({ message: 'Caché limpiado exitosamente' });
 });
 
-// --- MANEJO DE ERRORES GLOBAL ---
 app.use((err, req, res, next) => {
     console.error('Error no manejado:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
 });
 
-// --- ENCENDIDO DEL SERVIDOR ---
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log("═══════════════════════════════════════════");
@@ -313,5 +323,4 @@ app.listen(PORT, () => {
     console.log("═══════════════════════════════════════════");
 });
 
-// IMPORTANTE: Exportar para Vercel
 module.exports = app;
