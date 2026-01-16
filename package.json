@@ -8,12 +8,18 @@
   "engines": {
     "node": "20.x"
   },
-  "keywords": ["noticias", "fact-checking", "gemini", "ai"],
+  "keywords": [
+    "noticias",
+    "fact-checking",
+    "gemini",
+    "ai"
+  ],
   "author": "",
   "license": "ISC",
   "description": "Portal de noticias verificadas con IA",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "axios": "^1.13.2",
     "dotenv": "^17.2.3",
     "express": "^5.2.1"
   }

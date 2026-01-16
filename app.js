@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const path = require('path');
+const axios = require('axios');
 const app = express();
 
 // CORRECCIÓN: Usar la clase correcta del SDK oficial
@@ -177,9 +178,9 @@ IMPORTANTE: Busca activamente esta información actual en Google.`;
     }
 });
 
-// --- RUTA 2: PORTADA DE NOTICIAS ---
+
+// --- RUTA 2: PORTADA DE NOTICIAS CON NEWSAPI ---
 app.get('/noticias-dia', async (req, res) => {
-    // Verificar caché primero
     const cacheKey = 'noticias-dia';
     const cached = getCached(cacheKey);
     
@@ -188,101 +189,64 @@ app.get('/noticias-dia', async (req, res) => {
     }
 
     try {
-        const fechaHoy = new Date().toLocaleDateString('es-MX', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        // Fetch noticias de NewsAPI
+        const newsResponse = await axios.get('https://newsapi.org/v2/top-headlines', {
+            params: {
+                country: 'mx',
+                pageSize: 10,
+                apiKey: process.env.NEWS_API_KEY
+            }
         });
 
-        // CORRECCIÓN: Sintaxis correcta según documentación
-        const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash",
-            tools: [
-                { googleSearch: {} }  // CORRECCIÓN: Sintaxis correcta
-            ],
-            systemInstruction: `Eres un curador de noticias que DEBE buscar en Google las noticias de HOY.
-
-FECHA DE HOY: ${fechaHoy}
-
-PROCESO OBLIGATORIO:
-1. Busca en Google noticias de las últimas 24 horas
-2. Para cada categoría, busca noticias específicas actuales
-3. VERIFICA que las URLs sean reales
-4. Solo noticias de las últimas 24-48 horas
-
-CATEGORÍAS (debes generar EXACTAMENTE 5 tarjetas):
-- 🌍 Internacional
-- 🇲🇽 Nacional México
-- 🎭 Espectáculos
-- 🎨 Cultura
-- 🔬 Ciencia
-
-FORMATO HTML EXACTO (copia este formato):
-<div class="news-card">
-  <span class="tag internacional">INTERNACIONAL</span>
-  <h3 class="news-title">Título corto de máximo 60 caracteres</h3>
-  <p class="news-summary">Resumen de 2 líneas máximo que explique la noticia.</p>
-  <a href="https://url-completa-real.com" target="_blank" rel="noopener" class="source-btn">Ver noticia 🔗</a>
-</div>
-
-CLASES CSS válidas: "internacional", "nacional", "espectaculos", "cultura", "ciencia"
-
-REGLAS:
-- URLs completas con https://
-- NO inventes URLs
-- Si no encuentras noticia, busca con términos diferentes
-- Devuelve SOLO el HTML, sin explicaciones`
-        });
-
-        const prompt = `Busca en Google y genera 5 tarjetas HTML de noticias actuales.
-
-Fecha: ${fechaHoy}
-
-Busca noticias verificables de medios reconocidos (El País, BBC, Reforma, CNN, El Universal, etc.) de las últimas 24-48 horas.`;
-
-        const result = await model.generateContent(prompt);
-        const respuestaTexto = result.response.text();
+        const articles = newsResponse.data.articles;
         
-        // Limpiar respuesta
-        let htmlLimpio = respuestaTexto
-            .replace(/```html/gi, '')
-            .replace(/```/g, '')
-            .trim();
+        // Categorizar noticias
+        const categorias = {
+            internacional: articles.slice(0, 2),
+            nacional: articles.slice(2, 4),
+            espectaculos: articles.slice(4, 6),
+            cultura: articles.slice(6, 8),
+            ciencia: articles.slice(8, 10)
+        };
 
-        // Validación: verificar tarjetas
-        const numeroTarjetas = (htmlLimpio.match(/class="news-card"/g) || []).length;
+        // Generar HTML
+        let htmlCards = '';
         
-        if (numeroTarjetas < 3) {
-            throw new Error(`Solo se generaron ${numeroTarjetas} tarjetas`);
+        for (const [categoria, arts] of Object.entries(categorias)) {
+            if (arts.length > 0) {
+                const art = arts[0];
+                const tagName = categoria.toUpperCase();
+                const imagen = art.urlToImage || 'https://via.placeholder.com/400x200/667eea/ffffff?text=Sin+Imagen';
+                const titulo = art.title.substring(0, 70);
+                const resumen = art.description ? art.description.substring(0, 120) + '...' : 'Sin descripción';
+                
+                htmlCards += `
+                <div class="news-card ${categoria}">
+                  <img src="${imagen}" alt="${titulo}" class="news-image" onerror="this.src='https://via.placeholder.com/400x200/667eea/ffffff?text=Sin+Imagen'">
+                  <div class="news-content">
+                    <span class="tag ${categoria}">${tagName}</span>
+                    <h3 class="news-title">${titulo}</h3>
+                    <p class="news-summary">${resumen}</p>
+                    <a href="${art.url}" target="_blank" rel="noopener" class="source-btn">${art.source.name} 🔗</a>
+                  </div>
+                </div>`;
+            }
         }
 
         const response = { 
-            html: htmlLimpio,
-            fecha: fechaHoy,
-            total: numeroTarjetas,
+            html: htmlCards,
+            fecha: new Date().toLocaleDateString('es-MX'),
+            total: 5,
             cached: false
         };
 
-        // Guardar en caché
         setCache(cacheKey, response);
-
         res.json(response);
 
     } catch (error) {
         console.error("❌ Error en noticias:", error.message);
-        
-        let errorMsg = "🚨 Error temporal al cargar noticias.";
-        
-        if (error.message.includes('429') || error.message.includes('quota')) {
-            errorMsg = "⏳ Cuota de API agotada. Las noticias se actualizarán pronto.";
-        }
-        
         res.status(500).json({ 
-            html: `<div class="error-card">
-                <h3>${errorMsg}</h3>
-                <p>Intenta de nuevo en unos minutos o usa la búsqueda manual.</p>
-            </div>`,
+            html: `<div class="error-card"><h3>Error temporal</h3><p>Intenta de nuevo.</p></div>`,
             error: true
         });
     }
