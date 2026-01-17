@@ -17,7 +17,7 @@ const CACHE_DURATION = 15 * 60 * 1000; // 15 minutos
 
 // Rate limiting por IP
 const requestCounts = new Map();
-const RATE_LIMIT = 5; // 5 peticiones
+const RATE_LIMIT = 50; // 50 peticiones
 const RATE_WINDOW = 60 * 1000; // por minuto
 
 // Funciones de caché
