@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <!-- PWA Meta Tags -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#6366f1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Chisme IA">
+<link rel="apple-touch-icon" href="/icon-192.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chisme IA - Portal de Noticias Verificadas</title>
@@ -512,7 +519,7 @@
         <section class="search-section">
             <div class="container">
                 <h1>Investigación de Hechos</h1>
-                <p>Ingrese un nombre o rumor para verificar su veracidad en tiempo real mediante fuentes oficiales.</p>
+                <p>Ingrese una palabra, tema o rumor para verificar su veracidad en tiempo real mediante fuentes oficiales.</p>
                 
                 <div class="search-box">
                     <input 
@@ -740,6 +747,26 @@
                 return 'Ver fuente';
             }
         }
+        // Registrar Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('✅ Service Worker registrado'))
+            .catch(err => console.log('❌ Error SW:', err));
+    });
+}
     </script>
+
+<footer style="text-align: center; padding: 3rem 0; color: #b4b9d8;">
+    <div class="container">
+        <p>© 2026 Chisme IA - Portal de Noticias Verificadas</p>
+        <div style="margin-top: 1rem;">
+            <a href="/terminos.html" style="color: #6366f1; margin: 0 1rem;">Términos</a>
+            <a href="/privacidad.html" style="color: #6366f1; margin: 0 1rem;">Privacidad</a>
+            <a href="/acerca.html" style="color: #6366f1; margin: 0 1rem;">Acerca de</a>
+        </div>
+    </div>
+</footer>
+
 </body>
 </html>
