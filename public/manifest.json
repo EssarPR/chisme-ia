@@ -2,7 +2,7 @@
     "name": "Chisme IA - Portal de Noticias Verificadas",
     "short_name": "Chisme IA",
     "description": "Verificación de noticias en tiempo real con IA",
-    "start_url": "/",
+    "start_url": "/?source=pwa",
     "display": "standalone",
     "background_color": "#0a0e27",
     "theme_color": "#6366f1",

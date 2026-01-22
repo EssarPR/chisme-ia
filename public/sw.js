@@ -1,10 +1,10 @@
 const CACHE_NAME = 'chisme-ia-v1';
 const urlsToCache = [
   '/',
-  '/index.html',
-  '/terminos.html',
-  '/privacidad.html',
-  '/acerca.html'
+  '/index',
+  '/terminos',
+  '/privacidad',
+  '/acerca'
 ];
 
 // Instalación - cachear recursos
