@@ -525,6 +525,73 @@
         ::-webkit-scrollbar-thumb:hover {
             background: var(--accent-tertiary);
         }
+
+        /* ===== NOTICIAS DEL DÍA ===== */
+
+.news-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.news-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.news-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(0,0,0,0.08);
+}
+
+.news-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #1a1a1a;
+  line-height: 1.35;
+}
+
+.news-summary {
+  font-size: 0.95rem;
+  color: #555;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.news-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.news-source {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.news-link {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #667eea;
+  text-decoration: none;
+}
+
+.news-link:hover {
+  text-decoration: underline;
+}
+
+/* Desktop */
+@media (min-width: 768px) {
+  .news-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
     </style>
 </head>
 <body>
@@ -711,8 +778,8 @@
 
         // Cargar noticias
         async function cargarNoticias() {
-            const newsGrid = document.getElementById('newsGrid');
-            newsGrid.innerHTML = '<div class="loading" style="grid-column: 1/-1;"><div class="spinner"></div><p>Cargando noticias verificadas...</p></div>';
+            const newsContainer = document.getElementById('newsGrid');
+            newsContainer.innerHTML = '<div class="loading" style="grid-column: 1/-1;"><div class="spinner"></div><p>Cargando noticias verificadas...</p></div>';
 
             try {
                 const response = await fetch('/noticias-dia');

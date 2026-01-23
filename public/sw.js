@@ -4,7 +4,7 @@ const urlsToCache = [
   '/index',
   '/terminos',
   '/privacidad',
-  '/acerca'
+  '/acerca-de'
 ];
 
 // Instalación - cachear recursos

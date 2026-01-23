@@ -158,53 +158,86 @@ Fecha de hoy: ${new Date().toLocaleDateString('es-MX')}`
    NOTICIAS DEL DÍA
 ================================ */
 
+// --- RUTA 2: PORTADA DE NOTICIAS (REDISEÑADA) ---
 app.get('/noticias-dia', async (req, res) => {
-  const cacheKey = 'noticias-dia';
-  const cached = getCached(cacheKey);
+    const cacheKey = 'noticias-dia-v2';
+    const cached = getCached(cacheKey);
 
-  if (cached) return res.json(cached);
-
-  const feeds = {
-    internacional: 'https://news.google.com/rss?hl=es-419&gl=MX&ceid=MX:es',
-    nacional: 'https://news.google.com/rss?hl=es-419&gl=MX&ceid=MX:es',
-    espectaculos: 'https://news.google.com/rss/search?q=espectáculos&hl=es-419&gl=MX&ceid=MX:es',
-    tecnologia: 'https://news.google.com/rss/search?q=tecnología&hl=es-419&gl=MX&ceid=MX:es',
-    ciencia: 'https://news.google.com/rss/search?q=ciencia&hl=es-419&gl=MX&ceid=MX:es'
-  };
-
-  let html = '';
-  const today = new Date().toDateString();
-
-  for (const [cat, url] of Object.entries(feeds)) {
-    try {
-      const feed = await parser.parseURL(url);
-
-      const item = feed.items.find(i =>
-        i.pubDate && new Date(i.pubDate).toDateString() === today
-      ) || feed.items[0];
-
-      if (!item) continue;
-
-      html += `
-      <div class="news-card ${cat}">
-        <h3>${item.title}</h3>
-        <p>${item.contentSnippet || 'Noticia reciente'}</p>
-        <a href="${item.link}" target="_blank">Leer más</a>
-      </div>`;
-    } catch (e) {
-      console.log(`Error en ${cat}`);
+    if (cached) {
+        return res.json(cached);
     }
-  }
 
-  const response = {
-    html,
-    fecha: new Date().toLocaleDateString('es-MX'),
-    total: Object.keys(feeds).length
-  };
+    try {
+        const feedUrl = 'https://news.google.com/rss?hl=es-419&gl=MX&ceid=MX:es-419';
+        const feed = await parser.parseURL(feedUrl);
 
-  setCache(cacheKey, response);
-  res.json(response);
+        if (!feed.items || feed.items.length === 0) {
+            throw new Error('Sin noticias disponibles');
+        }
+
+        // Filtrar noticias únicas por título
+        const seenTitles = new Set();
+        const uniqueNews = [];
+
+        for (const item of feed.items) {
+            const titleKey = item.title.toLowerCase().trim();
+            if (!seenTitles.has(titleKey)) {
+                seenTitles.add(titleKey);
+                uniqueNews.push(item);
+            }
+            if (uniqueNews.length >= 5) break;
+        }
+
+        let htmlCards = '';
+
+        uniqueNews.forEach(item => {
+            const titulo = item.title;
+            const resumen = item.contentSnippet
+                ? item.contentSnippet.substring(0, 140) + '…'
+                : 'Noticia reciente del día';
+            const fuente = item.source?.title || 'Google News';
+
+            htmlCards += `
+            <article class="news-card">
+              <div class="news-body">
+                <h3 class="news-title">${titulo}</h3>
+                <p class="news-summary">${resumen}</p>
+                <div class="news-footer">
+                  <span class="news-source">${fuente}</span>
+                  <a href="${item.link}" target="_blank" rel="noopener" class="news-link">
+                    Leer →
+                  </a>
+                </div>
+              </div>
+            </article>`;
+        });
+
+        const response = {
+            html: htmlCards,
+            fecha: new Date().toLocaleDateString('es-MX', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long'
+            }),
+            total: uniqueNews.length,
+            cached: false
+        };
+
+        setCache(cacheKey, response);
+        res.json(response);
+
+    } catch (error) {
+        console.error('❌ Error noticias:', error.message);
+        res.status(500).json({
+            html: `<div class="error-card">
+                     <h3>Noticias no disponibles</h3>
+                     <p>Intenta nuevamente en unos minutos.</p>
+                   </div>`,
+            error: true
+        });
+    }
 });
+
 
 /* ===============================
    HEALTH
