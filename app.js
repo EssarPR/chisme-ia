@@ -134,23 +134,22 @@ app.post('/chisme', async (req, res) => {
       - No inventes datos ni enlaces.
       - Usa un tono informativo y neutral.
       - Resalta datos clave con **negritas**.
-      
-      FORMATO DE RESPUESTA:
-      1. Escribe 2 a 4 párrafos explicando el tema de forma clara.
-      2. NO incluyas enlaces dentro de los párrafos.
-      3. Al final, SOLO SI EXISTEN FUENTES CONFIABLES, agrega la sección:
-      
-      🔍 FUENTES VERIFICADAS:
-      - Nombre del medio: https://url-real.com
-      - Nombre del medio: https://url-real.com
-      - Nombre del medio: https://url-real.com
-      
-      REGLAS PARA FUENTES:
-      - Máximo 3 fuentes
-      - URLs reales y completas (https://)
-      - Solo medios reconocidos (BBC, Reuters, El País, medios nacionales, sitios oficiales)
-      - NO inventes enlaces
-      - Si no hay fuentes claras, NO muestres esta sección
+    
+      FORMATO DE RESPUESTA (OBLIGATORIO):
+1. Escribe 2 a 4 párrafos explicando el tema de forma clara.
+2. NO incluyas enlaces dentro de los párrafos.
+3. SOLO UNA VEZ, al FINAL DEL TEXTO, agrega la sección exactamente con este título:
+
+🔍 FUENTES VERIFICADAS:
+
+4. Bajo ese título, lista de 1 a 3 fuentes reales en este formato:
+- Nombre del medio: https://url-real.com
+
+REGLAS ESTRICTAS:
+- ❌ NO repitas la sección de fuentes
+- ❌ NO crees más de una lista
+- ❌ NO vuelvas a mencionar fuentes después de esta sección
+- Si ya escribiste la sección 🔍 FUENTES VERIFICADAS, TERMINA la respuesta
       
       Fecha de hoy: ${new Date().toLocaleDateString('es-MX')}`
       
