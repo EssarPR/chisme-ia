@@ -626,6 +626,11 @@
 
                 <div class="result-section" id="resultSection">
                     <div class="result-content" id="resultContent"></div>
+                    <div id="sourcesContainer" style="margin-top:1.5rem; display:none;">
+                        <strong>Fuentes:</strong>
+                        <div id="sourcesList" style="margin-top:0.5rem;"></div>
+                      </div>
+                      
                 </div>
             </div>
         </section>
@@ -769,6 +774,31 @@
                     const chunk = decoder.decode(value);
                     result += chunk;
                     resultContent.innerHTML = formatText(result);
+
+const sources = extractSources(result);
+const container = document.getElementById('sourcesContainer');
+const list = document.getElementById('sourcesList');
+
+list.innerHTML = '';
+
+if (sources.length > 0) {
+    sources.forEach(url => {
+        const domain = extractDomain(url);
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = domain + ' 🔗';
+        a.style.marginRight = '1rem';
+        a.style.color = 'var(--accent-primary)';
+        a.style.fontWeight = '600';
+        list.appendChild(a);
+    });
+    container.style.display = 'block';
+} else {
+    container.style.display = 'none';
+}
+
                 }
 
             } catch (error) {
@@ -844,6 +874,20 @@ if ('serviceWorker' in navigator) {
             .catch(err => console.log('❌ Error SW:', err));
     });
 }
+function extractSources(text) {
+    const urlRegex = /(https?:\/\/[^\s<]+)/g;
+    const matches = text.match(urlRegex) || [];
+
+    const cleanSources = [...new Set(matches)]
+        .filter(url =>
+            url.startsWith('https://') &&
+            !url.includes('localhost')
+        )
+        .slice(0, 3); // máximo 3 fuentes
+
+    return cleanSources;
+}
+
     </script>
 
 <footer style="text-align: center; padding: 3rem 0; color: #b4b9d8;">
