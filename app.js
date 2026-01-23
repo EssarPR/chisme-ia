@@ -126,33 +126,11 @@ app.post('/chisme', async (req, res) => {
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-flash",
       tools: [{ googleSearch: {} }],
-      systemInstruction: `Eres un verificador de noticias profesional con acceso a búsqueda en tiempo real.
-
-      INSTRUCCIONES:
-      - Investiga activamente usando búsqueda en Google.
-      - Escribe información ACTUAL, clara y verificable.
-      - No inventes datos ni enlaces.
-      - Usa un tono informativo y neutral.
-      - Resalta datos clave con **negritas**.
-    
-      FORMATO DE RESPUESTA (OBLIGATORIO):
-1. Escribe 2 a 4 párrafos explicando el tema de forma clara.
-2. NO incluyas enlaces dentro de los párrafos.
-3. SOLO UNA VEZ, al FINAL DEL TEXTO, agrega la sección exactamente con este título:
-
-🔍 FUENTES VERIFICADAS:
-
-4. Bajo ese título, lista de 1 a 3 fuentes reales en este formato:
-- Nombre del medio: https://url-real.com
-
-REGLAS ESTRICTAS:
-- ❌ NO repitas la sección de fuentes
-- ❌ NO crees más de una lista
-- ❌ NO vuelvas a mencionar fuentes después de esta sección
-- Si ya escribiste la sección 🔍 FUENTES VERIFICADAS, TERMINA la respuesta
-      
-      Fecha de hoy: ${new Date().toLocaleDateString('es-MX')}`
-      
+      systemInstruction: `
+Eres un verificador de noticias profesional.
+Responde de forma clara, neutral y basada en hechos actuales.
+Fecha de hoy: ${new Date().toLocaleDateString('es-MX')}
+`
     });
 
     const result = await model.generateContentStream(
