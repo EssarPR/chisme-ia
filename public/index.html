@@ -154,6 +154,26 @@
             line-height: 1.2;
         }
 
+        .intro-beta {
+    max-width: 680px;
+    margin: 0 auto 1.5rem;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.intro-beta strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.intro-beta span {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
         .search-section p {
             color: var(--text-secondary);
             font-size: 1.125rem;
@@ -345,6 +365,9 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            display: flex;
+    flex-direction: column;
+    justify-content: space-between;
         }
 
         .news-card::before {
@@ -374,6 +397,24 @@
             object-fit: cover;
             background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
         }
+        
+        .news-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1.25rem;
+    font-size: 0.85rem;
+}
+
+.news-source {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.news-link {
+    color: var(--accent-primary);
+    font-weight: 600;
+}
 
         .news-content {
             padding: 2rem;
@@ -608,8 +649,12 @@
         <section class="search-section">
             <div class="container">
                 <h1>Investigación de Hechos</h1>
-                <p>Ingrese una palabra, tema o rumor para verificar su veracidad en tiempo real mediante fuentes oficiales.</p>
-                
+                <p class="intro-beta">
+                    Bienvenido a <strong>Chisme IA</strong>.  
+                    Pregúntame sobre noticias, temas actuales o dudas rápidas.  
+                    <span>Estamos en beta y mejorando constantemente.</span>
+                  </p>
+                               
                 <div class="search-box">
                     <input 
                         type="text" 
